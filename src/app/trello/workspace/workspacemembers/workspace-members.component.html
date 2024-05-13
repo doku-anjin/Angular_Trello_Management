@@ -1,0 +1,165 @@
+<section class="main-content columns is-fullheight">
+  <app-side-bar></app-side-bar>
+  <div class="container column is-10">
+    <div class="navbar-end" *ngIf="allowEdit || loggedInUser?.id == workspace?.owner?.id">
+      <div class="navbar-item">
+        <div class="buttons">
+          <button class="button is-primary" *ngIf="isAdmin || isOwner" (click)="showSingleInvite()"
+                  style="width: 180px">
+            <i class="fas fa-user-plus"></i>
+            Thêm thành viên
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="title-board">
+      <input #searchMember class="input is-link" type="text" placeholder="Tìm kiếm thành viên trong nhóm"
+             (keyup)="searchMembers(searchMember.value)">
+    </div>
+    <div class="user-container">
+      <div class="user-info">
+        <div>
+          <img class="user-img" src="{{workspaceOwner?.image}}">
+        </div>
+        <div class="user-name">
+          <h6 class="user-username">Tên đăng nhập: {{workspaceOwner?.username}}</h6>
+        </div>
+      </div>
+      <div>
+        <button class="button is-primary">
+          Người tạo
+        </button>
+      </div>
+    </div>
+    <div class="user-container" *ngFor="let member of workspace.members| paginate:{
+    itemsPerPage:pageSize,
+    currentPage:page,
+    totalItems:count
+    }; index as i" [class.background-current-user]="loggedInUser?.id == member.user?.id">
+      <div class="user-info">
+        <div>
+          <img class="user-img" src="{{member.user?.image}}">
+        </div>
+        <div class="user-name"><h2 class="user-nickname">{{member.user?.nickname}}</h2>
+          <h6 class="user-username">Tên đăng nhập:{{member.user?.username}}</h6>
+        </div>
+      </div>
+      <div>
+        <select style="width: 110px; border: 0" class="button is-primary" [ngModel]="member.role"
+                #newRole="ngModel" (change)="updateMember(member,newRole.value)" [disabled]="!(isOwner||isAdmin)">
+          <option class="" value="Chỉ xem">Chỉ xem</option>
+          <option value="Chỉnh sửa">Chỉnh sửa</option>
+          <option value="Quản trị">Quản trị</option>
+        </select>
+        <button class="button is-primary" style="width: 40px" (click)="removeMembers(i,member)"
+                *ngIf="(isAdmin||isOwner) && loggedInUser?.id != member.user?.id">
+          <i class="fas fa-user-minus" style="color: red"></i>
+        </button>
+      </div>
+    </div>
+    <pagination-controls class="my-pagination"
+                         previousLabel="Trước"
+                         nextLabel="Sau"
+                         [responsive]="true"
+                         (pageChange)="handlePageChange($event)">
+
+    </pagination-controls>
+  </div>
+</section>
+<div class="modal" id="create-workspace">
+  <div class="modal-background"></div>
+  <div class="modal-card" (click)="hideCreateWorkspaceModal()" style="margin-left: 600px">
+    <header class="modal-card-head">
+      <p class="modal-card-title">Tạo một nhóm mới</p>
+      <button class="delete" aria-label="close" (click)="hideCreateWorkspaceModal()"></button>
+    </header>
+    <section class="modal-card-body">
+      <div class="field" style="position: relative">
+        <label class="label">Tên bảng</label>
+        <div class="control">
+          <input class="input" type="text" required [(ngModel)]="newWorkspace.title" #workspaceTitle="ngModel">
+        </div>
+        <label class="label">Phân loại nhóm:</label>
+        <div class="control">
+          <select class="input" [(ngModel)]="newWorkspace.type" required #workspaceType="ngModel">
+            <option value="IT">IT</option>
+            <option value="Kế toán">Kế toán</option>
+            <option value="HR">Nhân sự</option>
+            <option value="Khác">Khác</option>
+          </select>
+        </div>
+        <label class="label">Quyền hạn</label>
+        <div class="control">
+          <select class="input" [(ngModel)]="newWorkspace.privacy" required #workspacePrivacy="ngModel">
+            <option value="Private">Riêng tư</option>
+            <option value="Public">Công khai</option>
+          </select>
+        </div>
+        <div *ngIf="workspaceTitle.invalid && workspaceTitle.touched" class="alert">
+          <div *ngIf="workspaceTitle.errors?.required" style="color: red">
+            Hãy nhập tiêu đề
+          </div>
+        </div>
+      </div>
+      <div class="control">
+        <label class="label">Người tạo: <span
+          class="is-info user-button is-light">{{loggedInUser.username}}</span></label>
+      </div>
+    </section>
+    <footer class="modal-card-foot">
+      <div class="alert">
+        <button [disabled]="workspaceTitle.invalid || workspaceType.invalid || workspacePrivacy.invalid"
+                class="button is-dark" (click)="createWorkspace()">Tạo
+        </button>
+      </div>
+      <button class="button is-light" (click)="hideCreateWorkspaceModal()">Hủy</button>
+    </footer>
+  </div>
+</div>
+<div class="modal" id="single-invite">
+  <div class="modal-background">
+    <div class="modal-card" style="margin-top: 150px">
+      <header class="modal-card-head">
+        <p class="modal-card-title">Thêm thành viên</p>
+        <button class="delete" aria-label="close" (click)="hideSingleInvite()"></button>
+      </header>
+      <section class="modal-card-body">
+        <div class="control">
+          <input #searchUserSingle class="input is-link" type="text" placeholder="Nhập tên thành viên"
+                 (keyup)="findAllUserByUsername(searchUserSingle.value)" required>
+        </div>
+        <div class="control">
+          <div *ngFor="let user of userSearchResult" class="dropdown-item">
+              <span *ngIf="workspace.owner.id != user.id" (click)="selectSingleUser(searchUserSingle, user)">
+              {{user.username}}
+            </span>
+          </div>
+        </div>
+        <div class="control">
+          <div *ngIf="pendingMember != null">
+            <label >Người dùng: {{pendingMember.username}}</label>
+            <br>
+            <label >Email: {{pendingMember.email}}</label>
+          </div>
+        </div>
+        <div class="control" style="margin-top: 10px">
+          <label>Quyền hạn:</label>
+          <select class="input" [(ngModel)]="pendingMemberRole" required #pendingRole="ngModel">
+            <option value="Quản trị">Quản trị</option>
+            <option value="Chỉnh sửa">Chỉnh sửa</option>
+            <option value="Chỉ xem">Chỉ xem</option>
+          </select>
+        </div>
+      </section>
+      <footer class="modal-card-foot">
+        <div class=" is-right">
+          <button [disabled]="pendingRole.invalid" class="button is-dark is-right"
+                  (click)="addSingleMember(pendingRole.value)" style="background: deepskyblue">Thêm
+          </button>
+        </div>
+        <button class="button is-light " (click)="hideSingleInvite()">Hủy</button>
+      </footer>
+    </div>
+  </div>
+</div>

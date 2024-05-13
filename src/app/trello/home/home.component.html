@@ -1,0 +1,65 @@
+<section class="main-content columns is-fullheight" xmlns="http://www.w3.org/1999/html">
+  <app-side-bar (workspacesPublic)="getWorkspacePublic($event)"></app-side-bar>
+  <app-modal
+    [workspace]="workspace"
+    (boards)="getBoards($event)"
+  ></app-modal>
+  <div class="container">
+    <div class="row">
+      <div class="col-md-4">
+        <div class="title-board">
+          <h1><i class="fa fa-table"></i> Bảng của bạn</h1>
+        </div>
+        <div class="section-board">
+          <div class="card">
+            <div class="img-circle-add-board">
+              <a (click)="displayAddBoardModal()"><i class="fas fa-plus-circle"></i></a>
+            </div>
+          </div>
+          <div class="card" *ngFor="let board of boards" routerLink="/board/{{board.id}}">
+            <div class="card-header"><p class="card-header-title" routerLink="/board/{{board.id}}">{{board.title}}</p>
+            </div>
+            <div class="card-content">
+              <div class="content">
+                <span style="font-size: small"><b>    Chủ sở hữu: </b>{{board.owner.username}}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="title-board">
+          <h1><i class="fa fa-table"></i> Bảng mà bạn là thành viên</h1>
+        </div>
+        <div class="section-board">
+          <div class="card" *ngFor="let board of sharedBoards" routerLink="/trello/board/{{board.id}}">
+            <div class="card-header"><p class="card-header-title">{{board.title}}</p></div>
+            <div class="card-content">
+              <div class="content">
+                <span style="font-size: small"><b>Chủ sở hữu: </b>{{board.owner}}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="title-board" #target>
+          <h1><i class="fas fa-object-group"></i> Nhóm Công khai</h1>
+        </div>
+        <div class="section-board">
+          <div *ngFor="let localWorkspace of workspacesPublic">
+            <div class="card" routerLink="/workspaces/{{localWorkspace.id}}/home"
+                 *ngIf="localWorkspace.privacy == 'Công khai'">
+              <div class="card-header"><p class="card-header-title">{{localWorkspace.title}}</p></div>
+              <div class="card-content">
+                <span style="font-size: small"><b>Chủ sở hữu: </b>{{localWorkspace.owner.username}}</span><br>
+                <span style="font-size: small"><b>Loại nhóm: </b>{{localWorkspace.type}}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
